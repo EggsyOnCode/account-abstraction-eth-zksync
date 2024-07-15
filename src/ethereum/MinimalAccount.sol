@@ -84,7 +84,7 @@ contract MinimalAccount is IAccount, Ownable {
     {
         bytes32 ethSignedMsgHash = MessageHashUtils.toEthSignedMessageHash(userOpHash);
         address signer = ECDSA.recover(ethSignedMsgHash, userOp.signature);
-        if (signer != owner()) {
+        if (signer != owner() && signer != address(this)) {
             return SIG_VALIDATION_FAILED;
         }
 

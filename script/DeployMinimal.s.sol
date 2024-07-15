@@ -15,8 +15,10 @@ contract DeployMinimal is Script {
         HelperConfig.NetworkConfig memory network = helperConfig.getConfig();
 
         vm.startBroadcast();
+
         minimalAccount = new MinimalAccount(network.entryPoint);
         minimalAccount.transferOwnership(network.account);
+
         vm.stopBroadcast();
     }
 }
