@@ -10,7 +10,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "@AA/contracts/core/Helpers.sol";
 import {IEntryPoint} from "@AA/contracts/interfaces/IEntryPoint.sol";
 
-contract MinimalAccount is IAccount, ECDSA, Ownable {
+contract MinimalAccount is IAccount, Ownable {
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -56,7 +56,7 @@ contract MinimalAccount is IAccount, ECDSA, Ownable {
     {
         validationData = _validateUserOp(userOp, userOpHash);
         // _validateNonce() ==> teh smart contract has to ensure the uniqueness of the nonce; but EntryPoint.sol already handles this for us
-        _payPrefund();
+        _payPrefund(missingAccountFunds);
     }
 
     function execute(address dest, uint256 value, bytes calldata functionData)
@@ -69,6 +69,10 @@ contract MinimalAccount is IAccount, ECDSA, Ownable {
         }
     }
 
+    function transferOwnership(address newOwner) public override onlyOwner {
+        _transferOwnership(newOwner);
+    }
+
     /*//////////////////////////////////////////////////////////////
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -76,20 +80,19 @@ contract MinimalAccount is IAccount, ECDSA, Ownable {
     /// @dev validation logic is kept simple for now: if the msg.sender is the owner and has signed the msg; then its valid
     function _validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash)
         internal
-        pure
         returns (uint256 validationData)
     {
-        bytes32 memory ethSignedMsgHash = MessageHashUtils.toEthSignedMessageHash(userOpHash);
+        bytes32 ethSignedMsgHash = MessageHashUtils.toEthSignedMessageHash(userOpHash);
         address signer = ECDSA.recover(ethSignedMsgHash, userOp.signature);
         if (signer != owner()) {
-            return SIG_VALIDATION_FAILED();
+            return SIG_VALIDATION_FAILED;
         }
 
-        return SIG_VALIDATION_SUCCESS();
+        return SIG_VALIDATION_SUCCESS;
     }
 
     /// @dev the contract (i.e the wallet) has to pay for the gas fees of the user operation to the EntryPoint
-    function _payPrefund(uint256 missingAccountFunds) internal returns (bool) {
+    function _payPrefund(uint256 missingAccountFunds) internal {
         if (missingAccountFunds > 0) {
             (bool suc,) = payable(msg.sender).call{value: missingAccountFunds, gas: type(uint256).max}("");
             suc;
