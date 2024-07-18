@@ -68,12 +68,10 @@ contract ZkMinimalAccount is IAccount, Ownable {
         bytes32 ethSignedMsgHash = _transaction.encodeHash();
         address signer = ECDSA.recover(ethSignedMsgHash, _transaction.signature);
         if (signer != owner()) {
-            revert ZkMinimalAccount__UnAuthhorizedMsgSender();
             magic = bytes4(0);
+        } else {
+            magic = ACCOUNT_VALIDATION_SUCCESS_MAGIC;
         }
-
-        magic = ACCOUNT_VALIDATION_SUCCESS_MAGIC;
-
         // return magic number
         // what is the purpose of the magic number?
         return magic;
