@@ -9,6 +9,5 @@ remappings = [
     '@AA/contracts=lib/account-abstraction/contracts',
     '@zkAA/contracts=lib/foundry-era-contracts/src/system-contracts/contracts'
 ]
-is-system = true
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
